@@ -1,15 +1,13 @@
 define([
     'underscore', 'jquery', 'backbone', 'react', 'platform/util',
+    'text!myapp/schema/DummyBean.json',
     'platform/properties/PropertiesFormView'
-], function (_, $, Backbone, React, util, PropertiesFormView) {
+], function (_, $, Backbone, React, util, sDummyBeanSchema, PropertiesFormView) {
     'use strict';
 
+    var dummyBeanSchema = JSON.parse(sDummyBeanSchema).data;
 
     function entrypoint() {
-
-        var asyncBeanTypeInfo = util.getJSON('/api/types/DummyBean');
-        asyncBeanTypeInfo.fail(function() { alert('fail'); });
-
 
         var DummyBean = Backbone.Model.extend({
             urlRoot: '/api/beans/DummyBean',
@@ -20,20 +18,17 @@ define([
 
         var model = new DummyBean({id: '8439112E-806C-11E2-B0ED-B4BDF046605F'});
 
-        $.when(asyncBeanTypeInfo).done(function (typeMetadata) {
+        function renderForm(sel) {
+            React.renderComponent(PropertiesFormView({
+                typeMetadata: dummyBeanSchema,
+                fieldMetadata: dummyBeanSchema.fields,
+                fields: ['tmfItemId', 'tmfItemType', 'description', 'isCoreForLevel', 'modifiedDate'],
+                model: model
+            }), $(sel)[0]);
+        }
 
-            function renderForm(sel) {
-                React.renderComponent(PropertiesFormView({
-                    typeMetadata: typeMetadata.data,
-                    fieldMetadata: typeMetadata.data.fields,
-                    fields: ['tmfItemId', 'tmfItemType', 'description', 'isCoreForLevel', 'modifiedDate'],
-                    model: model
-                }), $(sel)[0]);
-            }
+        _.each(['[data-id="form1"]', '[data-id="form2"]'], renderForm);
 
-            _.each(['[data-id="form1"]', '[data-id="form2"]', '[data-id="form3"]'], renderForm);
-
-        });
 
         model.fetch();
 
